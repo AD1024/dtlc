@@ -1,0 +1,23 @@
+(ocamllex
+  (modules lexer))
+
+(menhir
+ (modules parser)
+ (flags --strict))
+
+(library
+    (preprocess (pps ppx_deriving.show))
+    (modules syntax parser lexer)
+    (name dtlclib))
+
+(library
+    (preprocess (pps ppx_deriving.show))
+    (libraries dtlclib)
+    (modules typecheck)
+    (name typecheck))
+
+(executable
+    (preprocess (pps ppx_deriving.show))
+    (libraries dtlclib typecheck)
+    (modules main)
+    (name main))

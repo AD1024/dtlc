@@ -1,0 +1,12 @@
+id :: Forall (x : Nat). Nat;;
+id := \x : Nat. x;;
+
+test :: Forall (A : Type). Forall (x : A). x = x;;
+test := \A : Type.\x : A. Refl A x;;
+
+f_eq :: Forall (A : Type). Forall (B : Type). Forall (x : A). Forall (y : A). Forall (f : Forall (x : A). B). Forall (eq : (x = y)). (f x) = (f y);;
+f_eq := \A: Type. \B : Type. \x : A. \y : A. \f : (Forall (x : A). B).\eqf : (x = y).
+            eq_elim A
+                    (\u : Type.\v : Type. (f u) = (f v))
+                    (\w : A. Refl B (f w))
+                    eqf;;
