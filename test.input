@@ -4,6 +4,9 @@ id := \x : Nat. x;;
 eq_refl :: Forall (A : Type). Forall (x : A). x = x;;
 eq_refl := \A : Type.\x : A. Refl A x;;
 
+succ :: Forall (x : Nat). Nat;;
+succ := \x : Nat. Succ x;;
+
 plus :: Forall (x : Nat). Forall (y : Nat). Nat;;
 plus := \x : Nat.\y : Nat. nat_elim (\_ : Nat. Nat) y (\_ : Nat. \h : Nat. Succ h) x;;
 
@@ -26,3 +29,42 @@ eq_sym := \A : Type. \a : A. \b : A. \eq : (a = b).
             eq_elim A (\u : A.\v : A. v = u)
                       (\w : A. Refl A w)
                       eq;;
+
+eq_sym_again :: Forall (A : Type). Forall (a : A). Forall (b : A). Forall (eq : (a = b)). b = a;;
+eq_sym_again := \A : Type. \x : A. \y : A. \eq : (x = y). eq_sym A x y eq;;
+
+plus_Z :: Forall (x : Nat). (plus x Zero) = x;;
+plus_Z := \x : Nat. nat_elim (\z : Nat. (plus z Zero) = z)
+                            (Refl Nat Zero)
+                            (\n : Nat. \h : ((plus n Zero) = n). f_eq Nat Nat (plus n Zero) n succ h)
+                            x;;
+
+two :: Nat;;
+two := succ (succ Zero);;
+
+two_eq_two :: two = (plus (Succ Zero) (Succ Zero));;
+two_eq_two := Refl Nat two;;
+
+test_plus :: Forall (x : Nat). (plus Zero x) = x;;
+test_plus := \x : Nat. Refl Nat x;;
+
+
+plus_nSm :: Forall (x : Nat). Forall (y : Nat). (plus x (succ y)) = (succ (plus x y));;
+plus_nSm := \x : Nat. \y : Nat.
+            nat_elim (\z : Nat. (plus z (succ y)) = (succ (plus z y)))
+                     (f_eq Nat Nat y y succ (Refl Nat y))
+                     (\n : Nat.\IH : ((plus n (succ y)) = (succ (plus y n))). f_eq Nat Nat (plus n (Succ y)) (Succ (plus n y)) succ IH)
+                     x;;
+
+plus_comm :: Forall (x : Nat). Forall (y : Nat). (plus x y) = (plus y x);;
+plus_comm := \x : Nat. \y : Nat.
+            nat_elim (\z : Nat. (plus z y) = (plus y z))
+                     (eq_sym Nat (plus y Zero) y (plus_Z y))
+                     (\n : Nat. \IH : ((plus n y) = (plus y n)).
+                     eq_trans Nat 
+                            (Succ (plus n y))
+                            (Succ (plus y n))
+                            (plus y (Succ n))
+                            (f_eq Nat Nat (plus n y) (plus y n) succ IH) 
+                            (eq_sym Nat (Succ (plus y n)) (plus y (Succ n)) (plus_nSm y n)))
+                     x;;
