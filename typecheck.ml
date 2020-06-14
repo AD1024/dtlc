@@ -85,8 +85,8 @@ let rec type_infer (gamma : Syntax.raw_expr Syntax.Gamma.t) (e : Syntax.raw_expr
                           let gamma' = type_check gamma_1 e2 (Syntax.subst z Zero goal) in
                           begin match e3 with
                                 | Lambda (x, _, Lambda (y, _, e3)) ->
-                                  let _ = type_check (Syntax.Gamma.add y (Syntax.subst z (Syntax.Var x) goal) (Syntax.Gamma.add x Syntax.Nat gamma')) e3 (Syntax.subst z (Syntax.Succ (Syntax.Var x)) e1) in
-                                  Syntax.subst z e4 e1
+                                  let _ = type_check (Syntax.Gamma.add y (Syntax.subst z (Syntax.Var x) goal) (Syntax.Gamma.add x Syntax.Nat gamma')) e3 (Syntax.subst z (Syntax.Succ (Syntax.Var x)) goal) in
+                                  Syntax.subst z e4 goal
                                 | _ -> raise (TypeError (Printf.sprintf "Inductive Step %s is not valid" (Syntax.show_raw_expr e3)))
                           end
                         | _ -> raise (TypeError (Printf.sprintf "Motive of NatElim should be a Lambda, but not %s" (Syntax.show_raw_expr e1)))
@@ -115,6 +115,7 @@ let rec type_infer (gamma : Syntax.raw_expr Syntax.Gamma.t) (e : Syntax.raw_expr
   | Nat       -> Type None
   | Type (Some i) -> Type (Some (succ i))
 and type_check (gamma : Syntax.raw_expr Syntax.Gamma.t) (e : Syntax.raw_expr) (tau : Syntax.raw_expr) =
+  (* let _ = Printf.printf "Checking %s\n" (Syntax.show_raw_expr e) in *)
   let infer_ty = type_infer gamma e in
   if alpha_equiv tau infer_ty then
     begin match e with

@@ -1,8 +1,11 @@
 id :: Forall (x : Nat). Nat;;
 id := \x : Nat. x;;
 
-test :: Forall (A : Type). Forall (x : A). x = x;;
-test := \A : Type.\x : A. Refl A x;;
+eq_refl :: Forall (A : Type). Forall (x : A). x = x;;
+eq_refl := \A : Type.\x : A. Refl A x;;
+
+plus :: Forall (x : Nat). Forall (y : Nat). Nat;;
+plus := \x : Nat.\y : Nat. nat_elim (\_ : Nat. Nat) y (\_ : Nat. \h : Nat. Succ h) x;;
 
 f_eq :: Forall (A : Type). Forall (B : Type). Forall (x : A). Forall (y : A). Forall (f : Forall (x : A). B). Forall (eq : (x = y)). (f x) = (f y);;
 f_eq := \A: Type. \B : Type. \x : A. \y : A. \f : (Forall (x : A). B).\eqf : (x = y).
@@ -10,3 +13,16 @@ f_eq := \A: Type. \B : Type. \x : A. \y : A. \f : (Forall (x : A). B).\eqf : (x 
                     (\u : Type.\v : Type. (f u) = (f v))
                     (\w : A. Refl B (f w))
                     eqf;;
+
+eq_trans :: Forall (A : Type). Forall (a : A). Forall (b : A). Forall (c : A).
+           Forall (eqa : (a = b)). Forall (eqb : (b = c)). a = c;;
+eq_trans := \A : Type. \a : A. \b : A. \c : A.\Eab : (a = b).
+            eq_elim A (\u : A.\v : A. Forall (_ : (v = c)). u = c)
+                      (\w : A. \e : (w = c). e)
+                      Eab;;
+
+eq_sym :: Forall (A : Type). Forall (a : A). Forall (b : A). Forall (eq : (a = b)). b = a;;
+eq_sym := \A : Type. \a : A. \b : A. \eq : (a = b).
+            eq_elim A (\u : A.\v : A. v = u)
+                      (\w : A. Refl A w)
+                      eq;;
