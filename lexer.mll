@@ -10,6 +10,7 @@ rule token = parse
 | '\\'                                                 { BACKSLASH }
 | '.'                                                  { DOT }
 | ':'                                                  { COLON }
+| "->"                                                 { ARROW }
 | "Nat"                                                { NAT }
 | "Forall"                                             { FORALL }
 | "Sigma"                                              { SIGMA }

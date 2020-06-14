@@ -17,7 +17,7 @@ let () =
   let lexbuf = get_lexbuf () in
   let rec loop types abbrevs =
     match Parser.main Lexer.token lexbuf with
-    | None -> let _ = print_endline "bye!" in types, abbrevs
+    | None -> let _ = print_endline "Done" in types, abbrevs
     | Some (Def (x, e)) ->
         begin match Syntax.Gamma.find_opt x types with
               | None -> raise (NotDefinedError (Printf.sprintf "%s is not claimed yet" x))

@@ -115,7 +115,7 @@ let rec type_infer (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_
   | NatElim (e1, e2, e3, e4) ->
                   let gamma_1 = type_check sigma gamma e4 Syntax.Nat in
                   begin match e1 with
-                        | Lambda (z, Nat, goal) ->
+                        | Lambda (z, _, goal) ->
                           let gamma' = type_check sigma gamma_1 e2 (Syntax.subst z Zero goal) in
                           begin match e3 with
                                 | Lambda (x, _, Lambda (y, _, e3)) ->
