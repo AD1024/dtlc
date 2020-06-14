@@ -7,7 +7,7 @@ eq_refl := \A : Type.\x : A. Refl A x;;
 succ :: Nat -> Nat;;
 succ := \x : Nat. Succ x;;
 
-plus :: Forall (x : Nat). Forall (y : Nat). Nat;;
+plus :: Nat -> Nat -> Nat;;
 plus := \x : Nat.\y : Nat. nat_elim (\_ : Nat. Nat) y (\_ : Nat. \h : Nat. Succ h) x;;
 
 f_eq :: Forall (A : Type). Forall (B : Type). Forall (x : A). Forall (y : A). Forall (f : Forall (x : A). B). Forall (eq : (x = y)). (f x) = (f y);;
@@ -69,6 +69,16 @@ plus_comm := \x : Nat. \y : Nat.
 
 times_two :: Nat -> Nat;;
 times_two := \x : Nat. plus x x;;
+
+times :: Nat -> Nat -> Nat;;
+times := \x : Nat. \y : Nat.
+            nat_elim (\_. Nat)
+                     Zero
+                     (\n : Nat. \rec : Nat. plus rec y)
+                     x;;
+
+test_times :: Forall (x : Nat). times two x = times_two x;;
+test_times := \x : Nat. Refl Nat (times two x);;
 
 apply :: Forall (A : Type). Forall (B : Type). (A -> B) -> A -> B;;
 apply := \A. \B. \f : (A -> B). \x : A. f x;;
