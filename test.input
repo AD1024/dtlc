@@ -4,7 +4,7 @@ id := \x : Nat. x;;
 eq_refl :: Forall (A : Type). Forall (x : A). x = x;;
 eq_refl := \A : Type.\x : A. Refl A x;;
 
-succ :: Forall (x : Nat). Nat;;
+succ :: Nat -> Nat;;
 succ := \x : Nat. Succ x;;
 
 plus :: Forall (x : Nat). Forall (y : Nat). Nat;;
@@ -72,3 +72,16 @@ times_two := \x : Nat. plus x x;;
 
 apply :: Forall (A : Type). Forall (B : Type). (A -> B) -> A -> B;;
 apply := \A. \B. \f : (A -> B). \x : A. f x;;
+
+dependent_apply :: Forall (A : Type). Forall (B : A -> Type). Forall (x : A). (A -> (B x)) -> B x;;
+dependent_apply := \A. \B : (A -> Type). \x : A. \f : (A -> (B x)). f x;;
+
+# Postulate
+my_nat_elim :: Forall (goal : (Nat -> Type)). goal Zero -> Forall (ind : (Forall (n : Nat). Forall (IH : goal n). goal (Succ n))). Forall (x : Nat). goal x;;
+
+plus_Z_again :: Forall (x : Nat). (plus x Zero) = x;;
+plus_Z_again := \x : Nat. my_nat_elim
+                            (\z : Nat. (plus z Zero) = z)
+                            (Refl Nat Zero)
+                            (\n : Nat. \h : ((plus n Zero) = n). f_eq Nat Nat (plus n Zero) n succ h)
+                            x;;

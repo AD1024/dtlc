@@ -40,7 +40,7 @@ app_expr:
 | COLON e = X                                            { e }
 
 expr:
-| BACKSLASH x = ID t = optional_ty(expr) DOT e = expr                     { Syntax.Lambda (x, t, e) }
+| BACKSLASH x = ID t = optional_ty(expr) DOT e = expr                           { Syntax.Lambda (x, t, e) }
 | SUCC e = atomic_expr                                                          { Syntax.Succ e }                                 
 | REFL e1 = atomic_expr e2 = atomic_expr                                        { Syntax.Refl (e1, e2) }
 | NATELIM e1 = atomic_expr e2 = atomic_expr e3 = atomic_expr e4 = atomic_expr   { Syntax.NatElim (e1, e2, e3, e4) }
