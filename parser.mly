@@ -9,6 +9,7 @@
 %token LPAREN RPAREN LANGLE RANGLE
 %token ARROW
 %token DOUBLESEMI DOUBLECOLON
+%token CMDNORMAL
 %token EOF
 
 %left  DOT
@@ -22,6 +23,7 @@
 main:
 | x = ID DOUBLECOLON e = expr DOUBLESEMI           { Some (Syntax.Claim (x, e)) }
 | x = ID COLONEQ e = expr DOUBLESEMI               { Some (Syntax.Def (x, e)) }
+| CMDNORMAL e = expr DOUBLESEMI                    { Some (Syntax.CmdNormalize e) }
 | EOF                                              { None }
 
 atomic_expr:

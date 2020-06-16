@@ -31,10 +31,13 @@ let rec normalize sigma (e : Syntax.raw_expr) =
   | Pi ((x, e1), e2) -> Pi ((x, normalize sigma e1), normalize sigma e2)
   | Sigma ((x, e1), e2) -> Sigma ((x, normalize sigma e1), normalize sigma e2)
   | Pair ((x, e1), e2) -> Pair ((x, normalize sigma e1), normalize sigma e2)
+  | Sum (e1, e2)     -> Sum (normalize sigma e1, normalize sigma e2)
   | Fst e ->  let e' = normalize sigma e in
               compute (Fst e')
   | Snd e ->  let e' = normalize sigma e in
               compute (Snd e')
+  | Inl (e1, e2) -> Inl (normalize sigma e1, normalize sigma e2)
+  | Inr (e1, e2) -> Inr (normalize sigma e1, normalize sigma e2)
   | Succ e -> Succ (normalize sigma e)
   | PropEq (e1, e2) -> PropEq (normalize sigma e1, normalize sigma e2)
   | Refl (e1, e2) -> Refl (normalize sigma e1, normalize sigma e2)
@@ -50,25 +53,32 @@ let rec alpha_equiv sigma (e1 : Syntax.raw_expr) (e2 : Syntax.raw_expr) =
     (* let () = Printf.printf "%s --> %s\n" (Syntax.show_raw_expr e2) (Syntax.show_raw_expr e1') in *)
     match normalize sigma e1, normalize sigma e2 with
     | Var x1, Var x2 -> x1 = x2
+    | Sum (e11, e12), Sum (e21, e22)
+    | Inl (e11, e12), Inl (e21, e22)
+    | Inr (e11, e12), Inr (e21, e22)
     | App (e11, e12), App (e21, e22)                  -> alpha_equiv sigma e11 e21 && alpha_equiv sigma e12 e22
     | Lambda (x1, t1, e11), Lambda (x2, t2, e21)      -> alpha_equiv sigma t1 t2 && alpha_equiv sigma e11 (Syntax.subst x2 (Var x1) e21)
     | Pi ((x1, e11), e12), Pi ((x2, e21), e22)
     | Pair ((x1, e11), e12), Pair ((x2, e21), e22)
     | Sigma ((x1, e11), e12), Sigma ((x2, e21), e22)      -> alpha_equiv sigma e11 e21 && alpha_equiv sigma e12 (Syntax.subst x2 (Var x1) e22)
-    | Fst e1, Fst e2 | Snd e1, Snd e2 | Succ e1, Succ e2  -> alpha_equiv sigma e1 e2
+    | Fst e1, Fst e2 | Snd e1, Snd e2
+    | Succ e1, Succ e2                                    -> alpha_equiv sigma e1 e2
     | PropEq (e11, e12), PropEq (e21, e22)                -> alpha_equiv sigma e11 e21 && alpha_equiv sigma e12 e22
     | NatElim (e11, e12, e13, e14), NatElim (e21, e22, e23, e24)  -> alpha_equiv sigma e11 e21 && alpha_equiv sigma e12 e22 && alpha_equiv sigma e13 e23 && alpha_equiv sigma e14 e24
     | EqElim (e11, e12, e13, e14), EqElim (e21, e22, e23, e24)    -> alpha_equiv sigma e11 e21 && alpha_equiv sigma e12 e22 && alpha_equiv sigma e13 e23 && alpha_equiv sigma e14 e24
     | Refl (e11, e12), Refl (e21, e22)                            -> alpha_equiv sigma e11 e21 && alpha_equiv sigma e12 e22
     | Type i1, Type i2 ->
       begin match i1, i2 with
-            | None, _ -> true
+            | None, _
             | _, None -> true
             | Some i1, Some i2 -> i1 = i2
       end
-    | Zero, Zero -> true
+    | Zero, Zero
     | Nat, Nat   -> true
     | _, _       -> false
+
+let update_gamma sigma gamma x tau = Syntax.Gamma.add x (normalize sigma tau) gamma
+let update_sigma sigma x e         = Syntax.Gamma.add x (normalize sigma e) sigma
 
 let rec type_infer (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_expr Syntax.Gamma.t) (e : Syntax.raw_expr) =
   (* let _ = Printf.printf "Checking %s\n" (Syntax.show_raw_expr e) in *)
@@ -92,6 +102,16 @@ let rec type_infer (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_
                           let gamma_1 = type_check sigma gamma e1 (Syntax.Type None) in
                           let _ = type_check sigma (Syntax.Gamma.add x e1 gamma_1) e2 (Syntax.Type None) in
                           Syntax.Type None
+  | Sum (e1, e2)       -> let _ = type_check sigma (type_check sigma gamma e1 (Syntax.Type None)) e2 (Syntax.Type None) in
+                          Syntax.Type None
+  | Inl (e1, e2)       -> begin match e1 with
+                                | Sum (t1, _) -> let _ = type_check sigma gamma e2 t1 in e1
+                                | _ -> raise (TypeError (Printf.sprintf "%s is not a Sum type (Inl)" (Syntax.show_raw_expr e2)))
+                          end
+  | Inr (e1, e2)       -> begin match e1 with
+                                | Sum (_, t2) -> let _ = type_check sigma gamma e2 t2 in e1
+                                | _ -> raise (TypeError (Printf.sprintf "%s is not a Sum type (Inr)" (Syntax.show_raw_expr e2)))
+                          end
   | Pair ((x, e1), e2) -> let ty_e1 = type_infer sigma gamma e1 in
                           let ty_e2 = type_infer sigma (Syntax.Gamma.add x ty_e1 gamma) e2 in
                           Syntax.Sigma ((x, ty_e1), ty_e2)
@@ -148,12 +168,15 @@ let rec type_infer (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_
   | Type None -> Type (Some 0)
   | Nat       -> Type None
   | Type (Some i) -> Type (Some (succ i))
-and type_check (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_expr Syntax.Gamma.t) (e : Syntax.raw_expr) (tau : Syntax.raw_expr) =
-  (* let _ = Printf.printf "Checking %s\n" (Syntax.show_raw_expr e) in *)
-  let infer_ty = type_infer sigma gamma e in
-  if alpha_equiv sigma tau infer_ty then
-    begin match e with
-          | Var x -> if infer_ty = Type None then Syntax.Gamma.add x tau gamma else gamma
-          | _     -> gamma
-    end
-  else raise (TypeError (Printf.sprintf "Cannot unify %s and %s" (Syntax.show_raw_expr tau) (Syntax.show_raw_expr infer_ty)))
+and type_check (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_expr Syntax.Gamma.t) (expr : Syntax.raw_expr) (tau : Syntax.raw_expr) =
+  (* let _ = Printf.printf "Checking %s : %s\n" (Syntax.show_raw_expr expr) (Syntax.show_raw_expr tau) in *)
+  let add_to_gamma x tau = update_gamma sigma gamma x tau in
+  (* let add_to_sigma x e   = update_sigma sigma x e in *)
+  let normalize_expr e = normalize sigma e in
+  match tau, expr with
+  | Pi ((x1, e11), e21), Lambda (x2, _, e22) -> type_check sigma (add_to_gamma x2 e11) e22 (normalize_expr (Syntax.subst x1 (Syntax.Var x2) e21))
+  | _, _ -> let infer_ty = type_infer sigma gamma expr in
+            if alpha_equiv sigma tau infer_ty then gamma
+            else 
+            let _ = Printf.printf "Checking %s : %s\n" (Syntax.show_raw_expr expr) (Syntax.show_raw_expr tau) in
+            raise (TypeError (Printf.sprintf "Cannot unify %s and %s" (Syntax.show_raw_expr (normalize_expr tau)) (Syntax.show_raw_expr (normalize_expr infer_ty))))

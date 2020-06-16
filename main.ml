@@ -29,6 +29,9 @@ let () =
     | Some (Claim (x, t)) ->
        print_endline (Printf.sprintf "Claim %s : %s" x (Syntax.show_raw_expr t));
        loop (Syntax.Gamma.add x t types) abbrevs
+    | Some (CmdNormalize e) ->
+       print_endline (Printf.sprintf "Normalize %s : %s" (Syntax.show_raw_expr e) (Syntax.show_raw_expr (Typecheck.normalize abbrevs e)));
+       loop types abbrevs
   in
   try
     let claimed, proved = loop Syntax.Gamma.empty Syntax.Gamma.empty in

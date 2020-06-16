@@ -23,8 +23,11 @@ type raw_expr =
   | App of raw_expr * raw_expr
   | Pi of (string * raw_expr) * raw_expr
   | Pair of (string * raw_expr) * raw_expr
+  | Sum of raw_expr * raw_expr
   | Fst of raw_expr
   | Snd of raw_expr
+  | Inl of raw_expr * raw_expr
+  | Inr of raw_expr * raw_expr
   | Sigma of (string * raw_expr) * raw_expr
 
   | Nat
@@ -40,6 +43,7 @@ type raw_expr =
   [@@deriving show]
 
 type binding =
+  | CmdNormalize of raw_expr
   | Def of string * raw_expr
   | Claim of string * raw_expr
 
@@ -55,11 +59,13 @@ let rec free_vars e =
   match e with
   | Var x                                   -> StringSet.singleton x
   | Lambda (x, t, e1)                       -> (StringSet.remove x (free_vars e1)) +++ (free_vars t)
+  | Inl (e1, e2) | Inr (e1, e2)
   | App (e1, e2) | Refl (e1, e2)            -> StringSet.union (free_vars e1) (free_vars e2)
   | Pi ((x, e1), e2) 
   | Sigma ((x, e1), e2) | Pair ((x, e1), e2)  -> StringSet.union (free_vars e1) (StringSet.remove x (free_vars e2))
   | Fst e | Snd e | Succ e                  -> free_vars e
   | Nat | Zero | Type _                     -> StringSet.empty
+  | Sum (e1, e2)
   | PropEq (e1, e2)                         -> StringSet.union (free_vars e1) (free_vars e2)
   | NatElim (e1, e2, e3, e4)                -> StringSet.union (StringSet.union (free_vars e1) (free_vars e2)) (StringSet.union (free_vars e3) (free_vars e4))
   | EqElim (e1, e2, e3, e4)                 ->  let s1 = free_vars e1 in
@@ -76,7 +82,7 @@ let rec subst (from_ : string) (to_ : raw_expr) (in_ : raw_expr) =
                             if StringSet.mem x (free_vars to_)
                             then let fresh_name = fresh ((StringSet.singleton from_) +++ (free_vars in_) +++ (free_vars to_)) x in
                                  let e2' = subst x (Var fresh_name) e2 in
-                                 Lambda (x, t', subst_helper e2')
+                                 Lambda (fresh_name, t', subst_helper e2')
                             else Lambda (x, t', subst_helper e2)
   | App (e1, e2)    -> App (subst_helper e1, subst_helper e2)
   | Pi ((x, e1), e2) -> if x = from_ then in_
@@ -100,9 +106,12 @@ let rec subst (from_ : string) (to_ : raw_expr) (in_ : raw_expr) =
                                       let e2' = subst x (Var fresh_name) e2 in
                                       Pair ((fresh_name, e1'), subst_helper e2')
                                  else Pair ((x, e1'), subst_helper e2)
+  | Sum (e1, e2)        -> Sum (subst_helper e1, subst_helper e2)
   | Refl (e1, e2)       -> Refl (subst_helper e1, subst_helper e2)
   | Fst e               -> Fst  (subst_helper e)
   | Snd e               -> Snd  (subst_helper e)
+  | Inl (e1, e2)               -> Inl (subst_helper e1, subst_helper e2)
+  | Inr (e1, e2)               -> Inr (subst_helper e1, subst_helper e2)
   | Succ e              -> Succ (subst_helper e)
   | PropEq (e1, e2)     -> PropEq (subst_helper e1, subst_helper e2)
   | NatElim (e1, e2, e3, e4) -> NatElim (subst_helper e1, subst_helper e2, subst_helper e3, subst_helper e4)

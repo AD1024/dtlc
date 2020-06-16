@@ -20,6 +20,7 @@ rule token = parse
 | "nat_elim"                                           { NATELIM }
 | "eq_elim"                                            { EQELIM }
 | "Type"                                               { TYPE }
+| "Normalize"                                          { CMDNORMAL }
 | '<'                                                  { LANGLE }
 | '>'                                                  { RANGLE }
 | '('                                                  { LPAREN }
