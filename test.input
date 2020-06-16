@@ -1,8 +1,11 @@
-id :: Nat -> Nat;;
-id := \x : Nat. x;;
+id :: Forall (A : Type). A -> A;;
+id := \A. \x. x;;
+
+id_nat :: Nat -> Nat;;
+id_nat := id Nat;;
 
 eq_refl :: Forall (A : Type). Forall (x : A). x = x;;
-eq_refl := \A : Type.\x : A. Refl A x;;
+eq_refl := \A. \x. Refl A x;;
 
 two :: Nat;;
 two := Succ (Succ Zero);;
@@ -14,32 +17,32 @@ succ :: Nat -> Nat;;
 succ := \x : Nat. Succ x;;
 
 plus :: Nat -> Nat -> Nat;;
-plus := \x : Nat.\y : Nat. nat_elim (\_ : Nat. Nat) y (\_ : Nat. \h : Nat. Succ h) x;;
+plus := \x. \y. nat_elim (\_. Nat) y (\_. \h. Succ h) x;;
 
 test_plus_1 :: Forall (x : Nat). plus Zero (succ x) = (succ x);;
 test_plus_1 := \x. Refl Nat (Succ x);;
 
 f_eq :: Forall (A : Type). Forall (B : Type). Forall (x : A). Forall (y : A). Forall (f : Forall (x : A). B). Forall (eq : (x = y)). (f x) = (f y);;
-f_eq := \A: Type. \B : Type. \x : A. \y : A. \f : (Forall (x : A). B).\eqf : (x = y).
+f_eq := \A. \B. \x. \y. \f. \eqf.
             eq_elim A
-                    (\u : Type.\v : Type. (f u) = (f v))
-                    (\w : A. Refl B (f w))
+                    (\u. \v. (f u) = (f v))
+                    (\w. Refl B (f w))
                     eqf;;
 
 eq_trans :: Forall (A : Type). Forall (a : A). Forall (b : A). Forall (c : A). a = b -> b = c -> a = c;;
-eq_trans := \A : Type. \a : A. \b : A. \c : A.\Eab : (a = b).
-            eq_elim A (\u : A.\v : A. Forall (_ : (v = c)). u = c)
-                      (\w : A. \e : (w = c). e)
+eq_trans := \A. \a. \b. \c.\Eab.
+            eq_elim A (\u. \v. v = c -> u = c)
+                      (\w : A. id (w = c))
                       Eab;;
 
 eq_sym :: Forall (A : Type). Forall (a : A). Forall (b : A). a = b -> b = a;;
-eq_sym := \A : Type. \a : A. \b : A. \eq : (a = b).
-            eq_elim A (\u : A.\v : A. v = u)
-                      (\w : A. Refl A w)
+eq_sym := \A. \a. \b. \eq.
+            eq_elim A (\u.\v. v = u)
+                      (\w. Refl A w)
                       eq;;
 
 eq_sym_again :: Forall (A : Type). Forall (a : A). Forall (b : A). Forall (eq : (a = b)). b = a;;
-eq_sym_again := \A : Type. \x : A. \y : A. \eq : (x = y). eq_sym A x y eq;;
+eq_sym_again := \A. \x. \y. \eq. eq_sym A x y eq;;
 
 two :: Nat;;
 two := succ (succ Zero);;
@@ -48,26 +51,26 @@ two_eq_two :: two = (plus (Succ Zero) (Succ Zero));;
 two_eq_two := Refl Nat two;;
 
 test_plus :: Forall (x : Nat). (plus Zero x) = x;;
-test_plus := \n : Nat. Refl Nat n;;
+test_plus := \n. Refl Nat n;;
 
 plus_Z :: Forall (x : Nat). (plus x Zero) = x;;
-plus_Z := \x : Nat. nat_elim (\z : Nat. (plus z Zero) = z)
+plus_Z := \x. nat_elim (\z. (plus z Zero) = z)
                             (Refl Nat Zero)
-                            (\n : Nat. \h : ((plus n Zero) = n). f_eq Nat Nat (plus n Zero) n succ h)
+                            (\n. \h. f_eq Nat Nat (plus n Zero) n succ h)
                             x;;
 
 plus_nSm :: Forall (x : Nat). Forall (y : Nat). (plus x (succ y)) = (succ (plus x y));;
-plus_nSm := \x : Nat. \y : Nat.
+plus_nSm := \x. \y.
             nat_elim (\z. (plus z (succ y)) = (succ (plus z y)))
                      (f_eq Nat Nat y y succ (Refl Nat y))
                      (\n. \IH : ((plus n (succ y)) = (succ (plus y n))). f_eq Nat Nat (plus n (Succ y)) (Succ (plus n y)) succ IH)
                      x;;
 
 plus_comm :: Forall (x : Nat). Forall (y : Nat). (plus x y) = (plus y x);;
-plus_comm := \x : Nat. \y : Nat.
-            nat_elim (\z : Nat. (plus z y) = (plus y z))
+plus_comm := \x. \y.
+            nat_elim (\z. (plus z y) = (plus y z))
                      (eq_sym Nat (plus y Zero) y (plus_Z y))
-                     (\n. \IH : ((plus n y) = (plus y n)).
+                     (\n. \IH.
                      eq_trans Nat 
                             (Succ (plus n y))
                             (Succ (plus y n))
@@ -90,7 +93,7 @@ test_times :: Forall (x : Nat). times two x = times_two x;;
 test_times := \x : Nat. Refl Nat (times two x);;
 
 apply :: Forall (A : Type). Forall (B : Type). (A -> B) -> A -> B;;
-apply := \A. \B. \f : (A -> B). \x : A. f x;;
+apply := \A. \B. \f. \x. f x;;
 
 dependent_apply :: Forall (A : Type). Forall (B : A -> Type). Forall (x : A). (A -> (B x)) -> B x;;
 dependent_apply := \A. \B. \x. \f. f x;;
@@ -99,11 +102,11 @@ dependent_apply := \A. \B. \x. \f. f x;;
 my_nat_elim :: Forall (goal : (Nat -> Type)). goal Zero -> Forall (ind : (Forall (n : Nat). Forall (IH : goal n). goal (Succ n))). Forall (x : Nat). goal x;;
 
 plus_Z_again :: Forall (x : Nat). (plus x Zero) = x;;
-plus_Z_again := \x : Nat. my_nat_elim
-                            (\z : Nat. (plus z Zero) = z)
-                            (Refl Nat Zero)
-                            (\n : Nat. \h : ((plus n Zero) = n). f_eq Nat Nat (plus n Zero) n succ h)
-                            x;;
+plus_Z_again := \x. my_nat_elim
+                    (\z. (plus z Zero) = z)
+                    (Refl Nat Zero)
+                    (\n. \h. f_eq Nat Nat (plus n Zero) n succ h)
+                    x;;
 
 six :: Nat;;
 six := plus (plus two two) two;;
