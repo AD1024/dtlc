@@ -44,9 +44,6 @@ eq_sym := \A. \a. \b. \eq.
 eq_sym_again :: Forall (A : Type). Forall (a : A). Forall (b : A). Forall (eq : (a = b)). b = a;;
 eq_sym_again := \A. \x. \y. \eq. eq_sym A x y eq;;
 
-two :: Nat;;
-two := succ (succ Zero);;
-
 two_eq_two :: two = (plus (Succ Zero) (Succ Zero));;
 two_eq_two := Refl Nat two;;
 
@@ -121,3 +118,50 @@ test_sum_prop :: (sum (times_two two)) = times two (Succ (times_two two));;
 test_sum_prop := Refl Nat (sum (times_two two));;
 
 Normalize (sum three);;
+
+or_nat :: Nat | Nat;;
+or_nat := inl Zero;;
+
+or_id :: (Nat -> Nat) | (Forall (A : Type). A -> A);;
+or_id := inr id;;
+
+Normalize (id_nat (sum six));;
+
+test_id_nat :: (id_nat (sum six)) = sum six;;
+test_id_nat := Refl Nat (sum six);;
+
+test_pair :: Nat * Nat;;
+test_pair := < Zero , Zero >;;
+
+Normalize (Fst test_pair);;
+
+# CH Correspondence
+case_sum :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (A -> C) -> (B -> C) -> (A | B) -> C;;
+case_sum := \A. \B. \C. \fac. \fbc. \ab.
+            sum_elim (\_. C) (\l. fac l) (\r. fbc r) ab;;
+
+f_comp :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (B -> C) -> (A -> B) -> (A -> C);;
+f_comp := \A. \B. \C. \bc. \ab. (\x. bc (ab x));;
+
+dependent_comp :: Forall (A : Type).
+                  Forall (B : A -> Type).
+                  Forall (C : (Forall (x : A). B x -> Type)).
+                  Forall (f : (Forall (x : A). Forall (y : (B x)). C x y)).
+                  Forall (g : Forall (x : A). B x).
+                  Forall (x : A). C x (g x);;
+dependent_comp := \A. \B. \C. \f. \g. \x : A. f x (g x);;
+
+proj_1 :: Forall (A : Type). Forall (B : Type). Forall (x : A * B). A;;
+proj_1 := \A. \B. \p. Fst p;;
+
+proj_2 :: Forall (A : Type). Forall (B : Type). Forall (x : A * B). B;;
+proj_2 := \A. \B. \p. Snd p;;
+
+inj_1 :: Forall (A : Type). Forall (B : Type). Forall (x : A). A | B;;
+inj_1 := \A. \B. \x. inl x;;
+
+inj_2 :: Forall (A : Type). Forall (B : Type). Forall (x : B). A | B;;
+inj_2 := \A. \B. \x. inr x;;
+
+arr_distrib :: Forall (A : Type). Forall (B : Type). Forall (C : Type). ((A | B) -> C) -> ((A -> C) * (B -> C));;
+arr_distrib := \A. \B. \C. \f. < f_comp A (A | B) C f (inj_1 A B) , f_comp B (A | B) C f (inj_2 A B) >;;

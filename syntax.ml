@@ -22,12 +22,12 @@ type raw_expr =
   | Lambda of string * raw_expr * raw_expr
   | App of raw_expr * raw_expr
   | Pi of (string * raw_expr) * raw_expr
-  | Pair of (string * raw_expr) * raw_expr
+  | Pair of raw_expr * raw_expr
   | Sum of raw_expr * raw_expr
   | Fst of raw_expr
   | Snd of raw_expr
-  | Inl of raw_expr * raw_expr
-  | Inr of raw_expr * raw_expr
+  | Inl of raw_expr
+  | Inr of raw_expr
   | Sigma of (string * raw_expr) * raw_expr
 
   | Nat
@@ -37,6 +37,7 @@ type raw_expr =
 
   | Refl of raw_expr * raw_expr
   | EqElim of raw_expr * raw_expr * raw_expr * raw_expr
+  | SumElim of raw_expr * raw_expr * raw_expr * raw_expr
   | PropEq of raw_expr * raw_expr
 
   | Type of int option
@@ -59,19 +60,22 @@ let rec free_vars e =
   match e with
   | Var x                                   -> StringSet.singleton x
   | Lambda (x, t, e1)                       -> (StringSet.remove x (free_vars e1)) +++ (free_vars t)
-  | Inl (e1, e2) | Inr (e1, e2)
-  | App (e1, e2) | Refl (e1, e2)            -> StringSet.union (free_vars e1) (free_vars e2)
+  | App (e1, e2) 
+  | Refl (e1, e2)
+  | Pair (e1, e2)                           -> StringSet.union (free_vars e1) (free_vars e2)
   | Pi ((x, e1), e2) 
-  | Sigma ((x, e1), e2) | Pair ((x, e1), e2)  -> StringSet.union (free_vars e1) (StringSet.remove x (free_vars e2))
-  | Fst e | Snd e | Succ e                  -> free_vars e
+  | Sigma ((x, e1), e2)                     -> StringSet.union (free_vars e1) (StringSet.remove x (free_vars e2))
+  | Fst e | Snd e
+  | Succ e | Inl e | Inr e                  -> free_vars e
   | Nat | Zero | Type _                     -> StringSet.empty
   | Sum (e1, e2)
   | PropEq (e1, e2)                         -> StringSet.union (free_vars e1) (free_vars e2)
-  | NatElim (e1, e2, e3, e4)                -> StringSet.union (StringSet.union (free_vars e1) (free_vars e2)) (StringSet.union (free_vars e3) (free_vars e4))
+  | NatElim (e1, e2, e3, e4)
+  | SumElim (e1, e2, e3, e4)
   | EqElim (e1, e2, e3, e4)                 ->  let s1 = free_vars e1 in
                                                 let s2 = StringSet.union (free_vars e2) s1 in
                                                 let s3 = StringSet.union (free_vars e3) s2 in
-                                                StringSet.union (free_vars e4) s3                    
+                                                StringSet.union (free_vars e4) s3                   
 
 let rec subst (from_ : string) (to_ : raw_expr) (in_ : raw_expr) =
   let subst_helper e = subst from_ to_ e in
@@ -99,21 +103,16 @@ let rec subst (from_ : string) (to_ : raw_expr) (in_ : raw_expr) =
                                       let e2' = subst x (Var fresh_name) e2 in
                                       Sigma ((fresh_name, e1'), subst_helper e2')
                                  else Sigma ((x, e1'), subst_helper e2)
-  | Pair ((x, e1), e2)  -> if x = from_ then in_
-                           else let e1' = subst from_ to_ e1 in
-                                if StringSet.mem x (free_vars to_)
-                                 then let fresh_name = fresh ((StringSet.singleton from_) +++ (free_vars in_) +++ (free_vars to_)) x in
-                                      let e2' = subst x (Var fresh_name) e2 in
-                                      Pair ((fresh_name, e1'), subst_helper e2')
-                                 else Pair ((x, e1'), subst_helper e2)
+  | Pair (e1, e2)       -> Pair (subst_helper e1, subst_helper e2)
   | Sum (e1, e2)        -> Sum (subst_helper e1, subst_helper e2)
   | Refl (e1, e2)       -> Refl (subst_helper e1, subst_helper e2)
   | Fst e               -> Fst  (subst_helper e)
   | Snd e               -> Snd  (subst_helper e)
-  | Inl (e1, e2)               -> Inl (subst_helper e1, subst_helper e2)
-  | Inr (e1, e2)               -> Inr (subst_helper e1, subst_helper e2)
+  | Inl e               -> Inl (subst_helper e)
+  | Inr e               -> Inr (subst_helper e)
   | Succ e              -> Succ (subst_helper e)
   | PropEq (e1, e2)     -> PropEq (subst_helper e1, subst_helper e2)
   | NatElim (e1, e2, e3, e4) -> NatElim (subst_helper e1, subst_helper e2, subst_helper e3, subst_helper e4)
   | EqElim (e1, e2, e3, e4) -> EqElim (subst_helper e1, subst_helper e2, subst_helper e3, subst_helper e4)
+  | SumElim (e1, e2, e3, e4) -> SumElim (subst_helper e1, subst_helper e2, subst_helper e3, subst_helper e4)
   | Nat | Zero | Type _ -> in_

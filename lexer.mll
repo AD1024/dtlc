@@ -8,8 +8,10 @@ rule token = parse
 | [' ' '\t']                                           { token lexbuf }
 | '\n'                                                 { Lexing.new_line lexbuf; token lexbuf }
 | '\\'                                                 { BACKSLASH }
+| '|'                                                  { BAR }
 | '.'                                                  { DOT }
 | ':'                                                  { COLON }
+| '*'                                                  { STAR }
 | "->"                                                 { ARROW }
 | "Nat"                                                { NAT }
 | "Forall"                                             { FORALL }
@@ -17,8 +19,13 @@ rule token = parse
 | "Succ"                                               { SUCC }
 | "Zero"                                               { ZERO }
 | "Refl"                                               { REFL }
+| "Fst"                                                { FST }
+| "Snd"                                                { SND }
 | "nat_elim"                                           { NATELIM }
 | "eq_elim"                                            { EQELIM }
+| "sum_elim"                                           { SUMELIM }
+| "inl"                                                { INL }
+| "inr"                                                { INR }
 | "Type"                                               { TYPE }
 | "Normalize"                                          { CMDNORMAL }
 | '<'                                                  { LANGLE }
