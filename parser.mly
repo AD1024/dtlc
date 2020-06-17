@@ -6,7 +6,7 @@
 %token NAT TYPE REFL SUCC ZERO FST SND
 %token NATELIM EQELIM INL INR SUMELIM
 %token DOT COLON COMMA
-%token LPAREN RPAREN LANGLE RANGLE
+%token LPAREN RPAREN LANGLE RANGLE LCURLY RCURLY
 %token ARROW
 %token DOUBLESEMI DOUBLECOLON
 %token CMDNORMAL
@@ -44,7 +44,8 @@ app_expr:
 | COLON e = X                                            { e }
 
 expr:
-| BACKSLASH x = ID t = optional_ty(expr) DOT e = expr                           { Syntax.Lambda (x, t, e) }
+| BACKSLASH x = ID optional_ty(expr) DOT e = expr                               { Syntax.Lambda (x, Syntax.Explicit, e) }
+| BACKSLASH LCURLY x = ID optional_ty(expr) RCURLY DOT e = expr                 { Syntax.Lambda (x, Syntax.Implicit, e) }
 | SUCC e = atomic_expr                                                          { Syntax.Succ e }
 | INL e = atomic_expr                                                           { Syntax.Inl e }
 | INR e = atomic_expr                                                           { Syntax.Inr e }
@@ -54,10 +55,11 @@ expr:
 | NATELIM e1 = atomic_expr e2 = atomic_expr e3 = atomic_expr e4 = atomic_expr   { Syntax.NatElim (e1, e2, e3, e4) }
 | EQELIM e1 = atomic_expr e2 = atomic_expr e3 = atomic_expr e4 = atomic_expr    { Syntax.EqElim (e1, e2, e3, e4) }
 | SUMELIM e1 = atomic_expr e2 = atomic_expr e3 = atomic_expr e4 = atomic_expr   { Syntax.SumElim (e1, e2, e3, e4) }
-| FORALL LPAREN x = ID COLON t = expr RPAREN DOT e = expr                       { Syntax.Pi ((x, t), e) }
+| FORALL LPAREN x = ID COLON t = expr RPAREN DOT e = expr                       { Syntax.Pi ((x, t, Syntax.Explicit), e) }
+| FORALL LCURLY x = ID COLON t = expr RCURLY DOT e = expr                       { Syntax.Pi ((x, t, Syntax.Implicit), e) }
 | x = expr EQ y = expr                                                          { Syntax.PropEq (x, y) }
 | x = expr BAR y = expr                                                         { Syntax.Sum(x, y) }
-| e1 = expr ARROW e2 = expr                                                     { Syntax.Pi(("$", e1), e2) }
+| e1 = expr ARROW e2 = expr                                                     { Syntax.Pi(("$", e1, Syntax.Explicit), e2) }
 | e1 = expr STAR e2 = expr                                                      { Syntax.Sigma(("$", e1), e2) }
 | SIGMA  LPAREN x = ID COLON t = expr RPAREN DOT e = expr                       { Syntax.Sigma ((x, t), e) }
 | LANGLE e1 = expr COMMA e2 = expr RANGLE                                       { Syntax.Pair (e1, e2) }

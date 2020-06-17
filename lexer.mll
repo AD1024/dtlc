@@ -32,6 +32,8 @@ rule token = parse
 | '>'                                                  { RANGLE }
 | '('                                                  { LPAREN }
 | ')'                                                  { RPAREN }
+| '{'                                                  { LCURLY }
+| '}'                                                  { RCURLY }
 | ','                                                  { COMMA }
 | "::"                                                 { DOUBLECOLON }
 | ";;"                                                 { DOUBLESEMI }

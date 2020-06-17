@@ -14,7 +14,7 @@ three :: Nat;;
 three := Succ two;;
 
 succ :: Nat -> Nat;;
-succ := \x : Nat. Succ x;;
+succ := \x. Succ x;;
 
 plus :: Nat -> Nat -> Nat;;
 plus := \x. \y. nat_elim (\_. Nat) y (\_. \h. Succ h) x;;
@@ -171,3 +171,62 @@ inj_2 := \A. \B. \x. inr x;;
 
 arr_distrib :: Forall (A : Type). Forall (B : Type). Forall (C : Type). ((A | B) -> C) -> ((A -> C) * (B -> C));;
 arr_distrib := \A. \B. \C. \f. < f_comp A (A | B) C f (inj_1 A B) , f_comp B (A | B) C f (inj_2 A B) >;;
+
+inj_1_impli :: Forall {A : Type}. Forall {B : Type}. Forall (x : A). A | B;;
+inj_1_impli := \x. inl x;;
+
+inj_2_impli :: Forall {A : Type}. Forall {B : Type}. Forall (x : B). A | B;;
+inj_2_impli := \x. inr x;;
+
+f_comp_impli :: Forall {A : Type}. Forall {B : Type}. Forall {C : Type}. (B -> C) -> (A -> B) -> (A -> C);;
+f_comp_impli := \bc. \ab. (\x. bc (ab x));;
+
+arr_distrib_impli :: Forall {A : Type}. Forall {B : Type}. Forall {C : Type}. ((A | B) -> C) -> ((A -> C) * (B -> C));;
+arr_distrib_impli := \f. < f_comp_impli f inj_1_impli , f_comp_impli f inj_2_impli >;;
+
+Normalize (inj_1_impli Zero);;
+
+refl :: Forall {A : Type}. Forall {x : A}. x = x;;
+refl := \{A}. \{x}. Refl A x;;
+
+eq_trans_impli :: Forall {A : Type}. Forall {a : A}. Forall {b : A}. Forall {c : A}. a = b -> b = c -> a = c;;
+eq_trans_impli := \{A}. \{a}. \{b}. \{c}. \Eab.
+                    eq_elim A (\u. \v. v = c -> u = c)
+                      (\w : A. id (w = c))
+                      Eab;;
+
+eq_sym_impli :: Forall {A : Type}. Forall {a : A}. Forall {b : A}. a = b -> b = a;;
+eq_sym_impli := \{A}. \{a}. \{b}. \eq.
+                eq_elim A (\u.\v. v = u)
+                        (\w. Refl A w)
+                        eq;;
+
+f_eq_impli :: Forall {A : Type}. Forall {B : Type}. Forall {x : A}. Forall {y : A}. Forall (f : A -> B). x = y -> (f x) = (f y);;
+f_eq_impli := \{A}. \{B}. \{x}. \{y}. \f. \eqf.
+                eq_elim A
+                    (\u. \v. (f u) = (f v))
+                    (\w. Refl B (f w))
+                    eqf;;
+
+plus_Z_simpler :: Forall (x : Nat). (plus x Zero) = x;;
+plus_Z_simpler := \x. nat_elim (\z. (plus z Zero) = z)
+                            (Refl Nat Zero)
+                            (\n. \h. f_eq_impli succ h)
+                            x;;
+
+plus_nSm_simpler :: Forall (x : Nat). Forall (y : Nat). (plus x (succ y)) = (succ (plus x y));;
+plus_nSm_simpler := \x. \y.
+            nat_elim (\z. (plus z (succ y)) = (succ (plus z y)))
+                     (f_eq_impli succ (Refl Nat y))
+                     (\n. \IH : ((plus n (succ y)) = (succ (plus y n))). f_eq_impli succ IH)
+                     x;;
+
+plus_comm_simpler :: Forall (x : Nat). Forall (y : Nat). (plus x y) = (plus y x);;
+plus_comm_simpler := \x. \y.
+                    nat_elim (\z. (plus z y) = (plus y z))
+                            (eq_sym_impli (plus_Z y))
+                            (\n. \IH.
+                            eq_trans_impli
+                                    (f_eq_impli succ IH) 
+                                    (eq_sym_impli (plus_nSm y n)))
+                            x;;

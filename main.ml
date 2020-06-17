@@ -22,7 +22,8 @@ let () =
         begin match Syntax.Gamma.find_opt x types with
               | None -> raise (NotDefinedError (Printf.sprintf "%s is not claimed yet" x))
               | Some ty -> 
-                let _ = type_check abbrevs (Syntax.Gamma.remove x types) e ty in
+                let _ = Typecheck.meta_variable_count := 0 in
+                let _ = type_check abbrevs (Syntax.Gamma.remove x types) Syntax.Gamma.empty e ty in
                 (* Printf.printf "%s = %s\n%!" x (Syntax.show_raw_expr e); *)
                 loop types (Syntax.Gamma.add x e abbrevs)
         end
