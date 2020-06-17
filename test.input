@@ -140,6 +140,12 @@ case_sum :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (A -> C) ->
 case_sum := \A. \B. \C. \fac. \fbc. \ab.
             sum_elim (\_. C) (\l. fac l) (\r. fbc r) ab;;
 
+weaken :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (C -> A) -> (C -> (A | B));;
+weaken := \A. \B. \C. \fca. \c. inl (fca c);;
+
+prod_weaken :: Forall (A : Type). Forall (B : Type). (A * B) -> (A | B);;
+prod_weaken := \A. \B. \prod. inl (Fst prod);;
+
 f_comp :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (B -> C) -> (A -> B) -> (A -> C);;
 f_comp := \A. \B. \C. \bc. \ab. (\x. bc (ab x));;
 
