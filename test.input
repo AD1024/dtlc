@@ -189,6 +189,9 @@ Normalize (inj_1_impli Zero);;
 refl :: Forall {A : Type}. Forall {x : A}. x = x;;
 refl := \{A}. \{x}. Refl A x;;
 
+eq_number :: six = six;;
+eq_number := refl;;
+
 eq_trans_impli :: Forall {A : Type}. Forall {a : A}. Forall {b : A}. Forall {c : A}. a = b -> b = c -> a = c;;
 eq_trans_impli := \{A}. \{a}. \{b}. \{c}. \Eab.
                     eq_elim A (\u. \v. v = c -> u = c)
@@ -205,12 +208,12 @@ f_eq_impli :: Forall {A : Type}. Forall {B : Type}. Forall {x : A}. Forall {y : 
 f_eq_impli := \{A}. \{B}. \{x}. \{y}. \f. \eqf.
                 eq_elim A
                     (\u. \v. (f u) = (f v))
-                    (\w. Refl B (f w))
+                    (\w. refl)
                     eqf;;
 
 plus_Z_simpler :: Forall (x : Nat). (plus x Zero) = x;;
 plus_Z_simpler := \x. nat_elim (\z. (plus z Zero) = z)
-                            (Refl Nat Zero)
+                            refl
                             (\n. \h. f_eq_impli succ h)
                             x;;
 

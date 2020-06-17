@@ -131,10 +131,6 @@ let rec type_infer (sigma : Syntax.raw_expr Syntax.Gamma.t) (gamma : Syntax.raw_
                                 | Pi ((x, e3, Syntax.Explicit), e4) -> 
                                   let _ = type_check sigma gamma meta_solutions e2 e3 in
                                   Syntax.subst x e2 e4
-                                (* | Pi ((x, _, Syntax.Implicit), e4) ->
-                                  begin match e1 with
-                                        | Lambda (x', _, e2') -> type_infer sigma gamma meta_solutions (App (e2', e2))
-                                  end *)
                                 | _ -> raise (TypeError (Printf.sprintf "Cannot apply %s to [%s : %s]" (Syntax.show_raw_expr e2) (Syntax.show_raw_expr e1) (Syntax.show_raw_expr ty_e1)))
                           end
   | Pi ((x, e1, _), e2) | Sigma ((x, e1), e2) ->
