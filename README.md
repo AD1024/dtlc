@@ -6,4 +6,5 @@ Dependently typed lambda calculus - Practice with DTT
 - [x] Basic DT stuffs (with built-in nat)
 - [x] Product
 - [x] Sum Type
+- [x] Implicit Arguments
 - [ ] Inductive Type
