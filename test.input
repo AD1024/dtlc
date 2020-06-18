@@ -1,6 +1,9 @@
 id :: Forall (A : Type). A -> A;;
 id := \A. \x. x;;
 
+id_impli :: Forall {A : Type}. A -> A;;
+id_impli := \x. x;;
+
 id_nat :: Nat -> Nat;;
 id_nat := id Nat;;
 
@@ -233,3 +236,13 @@ plus_comm_simpler := \x. \y.
                                     (f_eq_impli succ IH) 
                                     (eq_sym_impli (plus_nSm y n)))
                             x;;
+
+uip :: Forall {A : Type}. Forall {x : A}. Forall {y : A}. Forall {p : x = y}. Forall {q : x = y}. p = q;;
+uip := refl;;
+
+Normalize (id_impli six);;
+
+application :: Nat;;
+application := succ two;;
+
+Normalize application;;

@@ -25,7 +25,7 @@ let rec normalize sigma (e : Syntax.raw_expr) =
   match e with
   | Var x ->  begin  match Syntax.Gamma.find_opt x sigma with
                     | None -> e
-                    | Some e -> e
+                    | Some e -> normalize sigma e
               end
   | App (e1, e2) ->   begin let e1' = normalize sigma e1 in
                             let e2' = normalize sigma e2 in
