@@ -143,6 +143,9 @@ case_sum :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (A -> C) ->
 case_sum := \A. \B. \C. \fac. \fbc. \ab.
             sum_elim (\_. C) (\l. fac l) (\r. fbc r) ab;;
 
+case_prod :: Forall {A : Type}. Forall {B : Type}. Forall {C : Type}. (A -> C) -> (B -> C) -> (A * B) -> C;;
+case_prod := \ac. \_. \ab. ac (Fst ab);;
+
 weaken :: Forall (A : Type). Forall (B : Type). Forall (C : Type). (C -> A) -> (C -> (A | B));;
 weaken := \A. \B. \C. \fca. \c. inl (fca c);;
 
@@ -198,13 +201,13 @@ eq_number := refl;;
 eq_trans_impli :: Forall {A : Type}. Forall {a : A}. Forall {b : A}. Forall {c : A}. a = b -> b = c -> a = c;;
 eq_trans_impli := \{A}. \{a}. \{b}. \{c}. \Eab.
                     eq_elim A (\u. \v. v = c -> u = c)
-                      (\w : A. id (w = c))
+                      (\w : A. id_impli)
                       Eab;;
 
 eq_sym_impli :: Forall {A : Type}. Forall {a : A}. Forall {b : A}. a = b -> b = a;;
 eq_sym_impli := \{A}. \{a}. \{b}. \eq.
                 eq_elim A (\u.\v. v = u)
-                        (\w. Refl A w)
+                        (\w. refl)
                         eq;;
 
 f_eq_impli :: Forall {A : Type}. Forall {B : Type}. Forall {x : A}. Forall {y : A}. Forall (f : A -> B). x = y -> (f x) = (f y);;
@@ -223,7 +226,7 @@ plus_Z_simpler := \x. nat_elim (\z. (plus z Zero) = z)
 plus_nSm_simpler :: Forall (x : Nat). Forall (y : Nat). (plus x (succ y)) = (succ (plus x y));;
 plus_nSm_simpler := \x. \y.
             nat_elim (\z. (plus z (succ y)) = (succ (plus z y)))
-                     (f_eq_impli succ (Refl Nat y))
+                     (f_eq_impli succ refl)
                      (\n. \IH : ((plus n (succ y)) = (succ (plus y n))). f_eq_impli succ IH)
                      x;;
 
