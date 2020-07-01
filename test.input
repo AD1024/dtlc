@@ -72,11 +72,11 @@ plus_comm := \x. \y.
                      (eq_sym Nat (plus y Zero) y (plus_Z y))
                      (\n. \IH.
                      eq_trans Nat 
-                            (Succ (plus n y))
-                            (Succ (plus y n))
-                            (plus y (Succ n))
+                            (succ (plus n y))
+                            (succ (plus y n))
+                            (plus y (succ n))
                             (f_eq Nat Nat (plus n y) (plus y n) succ IH) 
-                            (eq_sym Nat (plus y (Succ n)) (Succ (plus y n)) (plus_nSm y n)))
+                            (eq_sym Nat (plus y (succ n)) (succ (plus y n)) (plus_nSm y n)))
                      x;;
 
 times_two :: Nat -> Nat;;
@@ -249,3 +249,6 @@ application :: Nat;;
 application := succ two;;
 
 Normalize application;;
+
+trivial_prop :: Forall {x : Nat}. Forall {y : Nat}. x = y -> succ x = succ y;;
+trivial_prop := \{x}. \{y}. \eq_xy. eq_elim Nat (\n. \m. succ n = succ m) (\w. refl) eq_xy;;
