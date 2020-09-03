@@ -53,6 +53,8 @@ type binding =
   | CmdNormalize of raw_expr
   | Def of string * raw_expr
   | Claim of string * raw_expr
+  | TypeDecl of string * binding list
+  [@@deriving show]
 
 let (+++) s1 s2 = StringSet.union s1 s2
 

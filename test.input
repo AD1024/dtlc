@@ -252,3 +252,17 @@ Normalize application;;
 
 trivial_prop :: Forall {x : Nat}. Forall {y : Nat}. x = y -> succ x = succ y;;
 trivial_prop := \{x}. \{y}. \eq_xy. eq_elim Nat (\n. \m. succ n = succ m) (\w. refl) eq_xy;;
+
+Data Natural : Type where
+      Z : Natural
+    | S : Natural -> Natural;;
+
+Data NatTree : Type where
+      Leaf   : (Natural -> NatTree)
+    | Branch : (Natural -> NatTree -> NatTree -> NatTree);;
+
+# NaturalElim :   Forall (n : Natural).
+#                 Forall (goal : Natural -> Type).
+#                 Forall (base : goal Z).
+#                 Forall (x : Natural). goal x -> goal (S x).
+#                 goal n;;

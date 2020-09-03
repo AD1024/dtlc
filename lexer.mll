@@ -14,6 +14,7 @@ rule token = parse
 | '*'                                                  { STAR }
 | "->"                                                 { ARROW }
 | "Nat"                                                { NAT }
+| "Data"                                               { DATA }
 | "Forall"                                             { FORALL }
 | "Sigma"                                              { SIGMA }
 | "Succ"                                               { SUCC }
@@ -21,6 +22,7 @@ rule token = parse
 | "Refl"                                               { REFL }
 | "Fst"                                                { FST }
 | "Snd"                                                { SND }
+| "where"                                              { WHERE }
 | "nat_elim"                                           { NATELIM }
 | "eq_elim"                                            { EQELIM }
 | "sum_elim"                                           { SUMELIM }

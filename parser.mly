@@ -3,7 +3,7 @@
 %token EQ COLONEQ BAR STAR
 %token BACKSLASH
 %token FORALL SIGMA
-%token NAT TYPE REFL SUCC ZERO FST SND
+%token NAT TYPE REFL SUCC ZERO FST SND DATA WHERE
 %token NATELIM EQELIM INL INR SUMELIM
 %token DOT COLON COMMA
 %token LPAREN RPAREN LANGLE RANGLE LCURLY RCURLY
@@ -17,6 +17,7 @@
 %right BAR
 %right STAR
 %left  EQ
+%left COLON
 
 %start <Syntax.binding option> main
 
@@ -26,7 +27,12 @@ main:
 | x = ID DOUBLECOLON e = expr DOUBLESEMI           { Some (Syntax.Claim (x, e)) }
 | x = ID COLONEQ e = expr DOUBLESEMI               { Some (Syntax.Def (x, e)) }
 | CMDNORMAL e = expr DOUBLESEMI                    { Some (Syntax.CmdNormalize e) }
+| DATA x = ID COLON TYPE WHERE constr = separated_list(BAR, type_decl) DOUBLESEMI
+                                                   { Some (Syntax.TypeDecl (x, constr)) }
 | EOF                                              { None }
+
+type_decl:
+| x = ID COLON e = expr                            { Syntax.Claim (x, e) }
 
 atomic_expr:
 | x = ID                                           { Syntax.Var x }
